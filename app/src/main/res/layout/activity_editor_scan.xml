@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0D1B2E">
+
+    <!-- Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:id="@+id/tvNombreDoc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Documento escaneado"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#1E293B"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <ImageButton
+            android:id="@+id/btnRenombrar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Renombrar" />
+    </LinearLayout>
+
+    <!-- Imagen escaneada -->
+    <ImageView
+        android:id="@+id/ivDocumento"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="16dp"
+        android:scaleType="fitCenter"
+        android:background="#1A2A3A" />
+
+    <!-- Contador de páginas -->
+    <TextView
+        android:id="@+id/tvPaginaActual"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Página 1 de 1"
+        android:textColor="#94A3B8"
+        android:textSize="12sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Herramientas -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp">
+
+        <!-- Rotar izquierda -->
+        <LinearLayout
+            android:id="@+id/btnRotarIzq"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="↺" android:textSize="24sp" android:textColor="#FFFFFF" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Rotar" android:textSize="11sp" android:textColor="#94A3B8" />
+        </LinearLayout>
+
+        <!-- Eliminar página -->
+        <LinearLayout
+            android:id="@+id/btnEliminarPag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="🗑" android:textSize="24sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Eliminar" android:textSize="11sp" android:textColor="#94A3B8" />
+        </LinearLayout>
+
+        <!-- Agregar página -->
+        <LinearLayout
+            android:id="@+id/btnAgregarPag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="➕" android:textSize="24sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Agregar" android:textSize="11sp" android:textColor="#94A3B8" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Botón guardar -->
+    <Button
+        android:id="@+id/btnGuardarPdf"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="GUARDAR PDF"
+        android:backgroundTint="#1A3A8F"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="14sp" />
+
+</LinearLayout>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.beevera.scanner.ui.home.HomeFragment"
+        android:label="Inicio" />
+    <fragment
+        android:id="@+id/scanFragment"
+        android:name="com.beevera.scanner.ui.scan.ScanFragment"
+        android:label="Escanear" />
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.beevera.scanner.ui.history.HistoryFragment"
+        android:label="Historial" />
+    <fragment
+        android:id="@+id/storageFragment"
+        android:name="com.beevera.scanner.ui.storage.StorageFragment"
+        android:label="Espacio" />
+    <fragment
+        android:id="@+id/configFragment"
+        android:name="com.beevera.scanner.ui.config.ConfigFragment"
+        android:label="Configuración" />
+    <fragment
+        android:id="@+id/etiquetasFragment"
+        android:name="com.beevera.scanner.ui.config.EtiquetasFragment"
+        android:label="Etiquetas" />
+</navigation>

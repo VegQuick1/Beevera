@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/baseline_home_24"
+        android:title="Inicio" />
+    <item
+        android:id="@+id/scanFragment"
+        android:icon="@drawable/document_scanner_24dp_e3e3e3_fill0_wght400_grad0_opsz24"
+        android:title="Escanear" />
+    <item
+        android:id="@+id/historyFragment"
+        android:icon="@drawable/history_24dp_e3e3e3_fill0_wght400_grad0_opsz24"
+        android:title="Historial" />
+    <item
+        android:id="@+id/storageFragment"
+        android:icon="@drawable/storage_24dp_e3e3e3_fill0_wght400_grad0_opsz24"
+        android:title="Espacio" />
+</menu>
