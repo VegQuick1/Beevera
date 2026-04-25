@@ -12,7 +12,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class DocumentAdapter(
-    private val onLabelClick: (DocumentEntity) -> Unit
+    private val onLabelClick: (DocumentEntity) -> Unit,
+    private val onItemClick: (DocumentEntity) -> Unit // <- Nueva acción
 ) : ListAdapter<DocumentEntity, DocumentAdapter.DocViewHolder>(DiffCallback()) {
 
     inner class DocViewHolder(private val binding: ItemDocumentBinding)
@@ -37,7 +38,9 @@ class DocumentAdapter(
             binding.tvDocLabel.background.setTint(Color.parseColor(bgColor))
             binding.tvDocLabel.setTextColor(Color.parseColor(textColor))
 
+            // Los clics
             binding.tvDocLabel.setOnClickListener { onLabelClick(doc) }
+            binding.root.setOnClickListener { onItemClick(doc) } // <- Clic en toda la tarjeta
         }
     }
 

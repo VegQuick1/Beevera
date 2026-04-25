@@ -11,6 +11,7 @@ import androidx.navigation.fragment.findNavController
 import com.beevera.scanner.LoginActivity
 import com.beevera.scanner.R
 import com.beevera.scanner.databinding.FragmentConfigBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class ConfigFragment : Fragment() {
 
@@ -25,10 +26,15 @@ class ConfigFragment : Fragment() {
         return binding.root
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val prefs = requireContext().getSharedPreferences("beevera_prefs", Context.MODE_PRIVATE)
+        // ── Botón de regresar ─────────────────────────────────────────
+        binding.btnBack.setOnClickListener {
+            findNavController().popBackStack()
+        }
 
         // ── Datos del usuario ─────────────────────────────────────────
         val nombre = prefs.getString("user_name", "Usuario") ?: "Usuario"
@@ -81,10 +87,17 @@ class ConfigFragment : Fragment() {
 
         // ── Cerrar sesión ─────────────────────────────────────────────
         binding.btnCerrarSesion.setOnClickListener {
+
+            // 1. Cerramos la sesión en Firebase (La nube)
+            FirebaseAuth.getInstance().signOut()
+
+            // 2. Borramos los datos locales (El teléfono)
             prefs.edit()
                 .remove("user_email")
                 .remove("user_name")
                 .apply()
+
+            // 3. Lo mandamos a la pantalla de Login y borramos el historial de pantallas
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)

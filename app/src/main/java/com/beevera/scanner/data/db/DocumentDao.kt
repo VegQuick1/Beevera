@@ -27,4 +27,7 @@ interface DocumentDao {
 
     @Query("SELECT SUM(size) FROM documents WHERE label = :label")
     fun getSizeByLabel(label: String): LiveData<Long?>
+
+    @Query("SELECT * FROM documents ORDER BY date DESC")
+    suspend fun getAllDocumentsSync(): List<DocumentEntity>
 }

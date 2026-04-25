@@ -19,6 +19,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanner
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import android.os.Environment
 
 class EditorScanActivity : AppCompatActivity() {
 
@@ -29,6 +37,9 @@ class EditorScanActivity : AppCompatActivity() {
     private var paginaActual = 0
     private var nombreDoc = "doc_${System.currentTimeMillis()}"
     private var rotacionActual = 0f
+
+    private lateinit var scannerLauncher: ActivityResultLauncher<IntentSenderRequest>
+    private lateinit var scanner: GmsDocumentScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +55,40 @@ class EditorScanActivity : AppCompatActivity() {
         if (paginas.isEmpty()) { finish(); return }
 
         mostrarPaginaActual()
+
+
+        // ── Configura ML Kit para agregar páginas ─────────────────────────
+        val options = GmsDocumentScannerOptions.Builder()
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+            .setGalleryImportAllowed(true)
+            .setPageLimit(10)
+            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+            .build()
+
+        scanner = GmsDocumentScanning.getClient(options)
+
+        scannerLauncher = registerForActivityResult(
+            ActivityResultContracts.StartIntentSenderForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+                val nuevasPaginas = scanResult?.pages ?: emptyList()
+
+                if (nuevasPaginas.isNotEmpty()) {
+                    nuevasPaginas.forEach { pagina ->
+                        val uri = pagina.imageUri
+                        val file = File(cacheDir, "scan_add_${System.currentTimeMillis()}.jpg")
+                        contentResolver.openInputStream(uri)?.use { input ->
+                            file.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        paginas.add(file) // ¡Se agrega a la lista actual!
+                    }
+                    paginaActual = paginas.size - 1 // Te mueve a la página recién agregada
+                    rotacionActual = 0f
+                    mostrarPaginaActual()
+                }
+            }
+        }
 
         // ── Renombrar ──────────────────────────────────────────────
         binding.btnRenombrar.setOnClickListener {
@@ -89,14 +134,15 @@ class EditorScanActivity : AppCompatActivity() {
             }
         }
 
-        // ── Agregar página → regresa a cámara ─────────────────────
+        // ── Agregar página ─────────────────────
         binding.btnAgregarPag.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra("ir_a_scan", true)
-                putStringArrayListExtra("paginas_previas", ArrayList(paginas.map { it.absolutePath }))
-            }
-            startActivity(intent)
-            finish()
+            scanner.getStartScanIntent(this)
+                .addOnSuccessListener { intentSender ->
+                    scannerLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error al iniciar escáner: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
 
         // ── Guardar PDF ────────────────────────────────────────────
@@ -120,8 +166,14 @@ class EditorScanActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val outputDir = getExternalFilesDir("Beevera") ?: filesDir
-                outputDir.mkdirs()
+                // 1. Obtenemos la ruta a la carpeta pública de "Documentos" del dispositivo
+                val carpetaDocumentos = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+
+                // 2. Opcional pero recomendado: Creamos una subcarpeta con el nombre de tu app
+                val outputDir = File(carpetaDocumentos, "Beevera")
+                if (!outputDir.exists()) {
+                    outputDir.mkdirs()
+                }
 
                 // Aplica rotación real a los bitmaps antes de generar PDF
                 val archivosFinales = paginas.mapIndexed { i, file ->
@@ -138,7 +190,7 @@ class EditorScanActivity : AppCompatActivity() {
 
                 viewModel.insertDocument(DocumentEntity(
                     name  = pdfFile.name,
-                    path  = pdfFile.absolutePath,
+                    path  = pdfFile.absolutePath, // Ahora la ruta será en Documentos/Beevera/...
                     size  = pdfFile.length(),
                     date  = System.currentTimeMillis(),
                     type  = "PDF",
@@ -147,7 +199,7 @@ class EditorScanActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditorScanActivity,
-                        "✅ PDF guardado: ${pdfFile.name}", Toast.LENGTH_SHORT).show()
+                        "✅ Guardado en Documentos/Beevera", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             } catch (e: Exception) {

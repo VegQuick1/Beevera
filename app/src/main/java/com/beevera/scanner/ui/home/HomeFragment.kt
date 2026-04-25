@@ -50,7 +50,17 @@ class HomeFragment : Fragment() {
         binding.tvGreeting.text = if (nombre.isNotEmpty()) "$saludo $nombre 👋" else "$saludo 👋"
 
         // RecyclerView de recientes
-        val adapter = DocumentAdapter { }
+        // RecyclerView de recientes
+        val adapter = DocumentAdapter(
+            onLabelClick = {
+                // Al tocar la etiqueta desde Home, vamos al historial
+                findNavController().navigate(R.id.historyFragment)
+            },
+            onItemClick = {
+                // Al tocar el documento desde Home, también vamos al historial
+                findNavController().navigate(R.id.historyFragment)
+            }
+        )
         binding.recyclerRecent.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerRecent.adapter = adapter
 

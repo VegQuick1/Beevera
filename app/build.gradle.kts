@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
+    // 🪄 Plugin de Firebase agregado aquí
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -45,6 +47,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.activity)
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // CameraX
     val camerax_version = "1.3.0"
@@ -74,4 +77,8 @@ dependencies {
 
     // ML Kit - Detección de documentos
     implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
+
+    // ─── FIREBASE (Autenticación y Base de datos) ───
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation("com.google.firebase:firebase-auth-ktx")
 }

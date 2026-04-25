@@ -17,6 +17,12 @@ import com.beevera.scanner.data.model.DocumentEntity
 import com.beevera.scanner.databinding.FragmentHistoryBinding
 import com.beevera.scanner.viewmodel.DocumentViewModel
 import java.util.Calendar
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HistoryFragment : Fragment() {
 
@@ -39,7 +45,10 @@ class HistoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = DocumentAdapter { doc -> showLabelDialog(doc) }
+        adapter = DocumentAdapter(
+            onLabelClick = { doc -> showLabelDialog(doc) },
+            onItemClick = { doc -> mostrarDetallesDocumento(doc) }
+        )
         binding.recyclerDocuments.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerDocuments.adapter = adapter
 
@@ -206,6 +215,111 @@ class HistoryFragment : Fragment() {
                 viewModel.insertDocument(doc.copy(label = todasEtiquetas[which]))
             }
             .show()
+    }
+
+    private fun mostrarDetallesDocumento(doc: DocumentEntity) {
+        var numeroPaginas = "Desconocido"
+
+        if (doc.type == "PDF") {
+            try {
+                val file = File(doc.path)
+                if (file.exists()) {
+                    val fileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                    val pdfRenderer = PdfRenderer(fileDescriptor)
+                    numeroPaginas = pdfRenderer.pageCount.toString()
+                    pdfRenderer.close()
+                    fileDescriptor.close()
+                }
+            } catch (e: Exception) {
+                numeroPaginas = "Error al leer"
+            }
+        }
+
+        val sdf = SimpleDateFormat("dd 'de' MMMM yyyy, HH:mm", Locale("es", "MX"))
+        val fechaFormateada = sdf.format(Date(doc.date))
+        val pesoMb = String.format(Locale.US, "%.2f", doc.size / (1024f * 1024f))
+
+        val mensaje = """
+            📍 Ruta:
+            ${doc.path}
+            
+            📄 Páginas: $numeroPaginas
+            ⚖️ Tamaño: $pesoMb MB
+            📅 Creado: $fechaFormateada
+            🏷️ Etiqueta: ${doc.label}
+        """.trimIndent()
+
+        // Mostramos la ventana de diálogo con las 3 opciones
+        AlertDialog.Builder(requireContext())
+            .setTitle(doc.name)
+            .setMessage(mensaje)
+            .setPositiveButton("Cerrar", null) // Botón derecho
+            .setNeutralButton("Abrir Archivo") { _, _ ->
+                abrirPdfExterno(doc.path) // Este es el que te daba problemas de permisos
+            }
+            .setNegativeButton("Borrar") { _, _ ->
+                // Botón izquierdo para borrar
+                confirmarYBorrar(doc)
+            }
+            .show()
+    }
+
+    private fun confirmarYBorrar(doc: DocumentEntity) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("¿Estás seguro?")
+            .setMessage("Se borrará el archivo físico y el registro.")
+            .setPositiveButton("Sí, eliminar") { _, _ ->
+                // Borrar archivo físico
+                val file = java.io.File(doc.path)
+                if (file.exists()) file.delete()
+
+                // Borrar de la base de datos (esto disparará la sincronización a Firebase)
+                viewModel.deleteDocument(doc)
+
+                android.widget.Toast.makeText(requireContext(), "Documento eliminado", android.widget.Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun abrirPdfExterno(ruta: String) {
+        val archivo = java.io.File(ruta)
+
+        if (!archivo.exists()) {
+            android.widget.Toast.makeText(requireContext(), "El archivo no existe", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            // 1. Generamos el pasaporte
+            // Reemplaza la línea vieja por esta (quitando el 'file' antes de 'provider')
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                requireContext(),
+                "com.beevera.scanner.provider", // <--- DEBE SER EXACTAMENTE ESTE
+                archivo
+            )
+
+            // 2. Preparamos el mensajero
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+
+                // Le damos la bandera de permiso
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                // ── EL TRUCO MAESTRO (ClipData) ──
+                // Esto asegura que el permiso sobreviva al viaje hacia Google Drive o Adobe en Android 11+
+                clipData = android.content.ClipData.newRawUri("", uri)
+            }
+
+            // 3. Enviamos directo (Android mostrará su propio menú automáticamente)
+            startActivity(intent)
+
+        } catch (e: android.content.ActivityNotFoundException) {
+            // Por si el usuario de verdad no tiene NINGUNA app que lea PDFs
+            android.widget.Toast.makeText(requireContext(), "No tienes ninguna aplicación para leer PDFs instalada.", android.widget.Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(requireContext(), "Error inesperado al abrir", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroyView() {
